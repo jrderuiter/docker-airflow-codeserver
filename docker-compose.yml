@@ -16,7 +16,8 @@ x-airflow-common:
     AIRFLOW__CORE__STORE_SERIALIZED_DAGS: 'true'
   volumes:
     - airflow_home:/opt/airflow
-  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
+  # Set default UID to match Jovyan
+  user: '1000:0'
 
 # ====================================== /AIRFLOW ENVIRONMENT VARIABLES ======================================
 
@@ -92,6 +93,19 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
+
+  jupyter:
+    build:
+      context: services/jupyter-code-server
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: 'yes'
+      CODE_WORKINGDIR: '/opt/airflow'
+    working_dir: /opt/airflow
+    volumes:
+      - airflow_home:/opt/airflow
+    user: '1000:0' # UID should match the default ID for the jovyan user
 
 volumes:
   postgres-db-volume:
